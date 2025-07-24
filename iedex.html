@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>Subway Clone - Phaser</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #upload {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <input type="file" accept="image/*" id="upload" />
+  <script>
+    let playerFaceTexture = null;
+    let score = 0;
+    let scoreText;
+
+    const config = {
+      type: Phaser.AUTO,
+      width: 800,
+      height: 600,
+      physics: {
+        default: 'arcade',
+        arcade: {
+          gravity: { y: 1000 },
+          debug: false
+        }
+      },
+      scene: {
+        preload: preload,
+        create: create,
+        update: update
+      }
+    };
+
+    const game = new Phaser.Game(config);
+
+    let player, cursors, ground, obstacle, background, police, coins;
+
+    function preload() {
+      this.load.image('ground', 'https://i.ibb.co/PGv8ZzG/platform.png');
+      this.load.image('obstacle', 'https://i.ibb.co/Yd2KQzB/obstacle.png');
+      this.load.image('body', 'https://i.ibb.co/nLLMbLw/player-body.png');
+      this.load.image('police', 'https://i.ibb.co/0Jm1XW4/police.png');
+      this.load.image('coin', 'https://i.ibb.co/mRZYFsm/coin.png');
+      this.load.image('bg', 'https://i.ibb.co/7NQ9YQ0/subway-bg.jpg');
+    }
+
+    function create() {
+      background = this.add.tileSprite(0, 0, 1600, 600, 'bg').setOrigin(0);
+
+      ground = this.physics.add.staticGroup();
+      ground.create(400, 590, 'ground').setScale(2).refreshBody();
+
+      player = this.add.container(100, 500);
+      const body = this.add.sprite(0, 0, 'body');
+      const face = this.add.sprite(0, -30, '__FACE__');
+      face.displayWidth = 40;
+      face.displayHeight = 40;
+
+      player.add([body]);
+      if (playerFaceTexture) {
+        face.setTexture(playerFaceTexture);
+        player.add(face);
+      }
+
+      this.physics.world.enable(player);
+      player.body.setCollideWorldBounds(true);
+      this.physics.add.collider(player, ground);
+
+      obstacle = this.physics.add.sprite(850, 530, 'obstacle');
+      obstacle.setVelocityX(-250);
+      obstacle.setImmovable(true);
+      this.physics.add.collider(obstacle, ground);
+      this.physics.add.overlap(player, obstacle, () => {
+        alert('🚨 انتهت اللعبة!');
+        location.reload();
+      });
+
+      police = this.physics.add.sprite(50, 530, 'police');
+      police.setCollideWorldBounds(true);
+      this.physics.add.collider(police, ground);
+
+      cursors = this.input.keyboard.createCursorKeys();
+
+      // عملة
+      coins = this.physics.add.group();
+      spawnCoin(this);
+      this.physics.add.overlap(player, coins, (player, coin) => {
+        coin.destroy();
+        score += 10;
+        scoreText.setText('النقاط: ' + score);
+        spawnCoin(this);
+      });
+
+      // نقاط
+      scoreText = this.add.text(10, 10, 'النقاط: 0', {
+        fontSize: '24px',
+        fill: '#fff',
+        fontFamily: 'sans-serif'
+      }).setScrollFactor(0).setDepth(100);
+    }
+
+    function update() {
+      background.tilePositionX += 3;
+
+      if (cursors.left.isDown) {
+        player.x -= 5;
+      } else if (cursors.right.isDown) {
+        player.x += 5;
+      }
+
+      if (cursors.up.isDown && player.body.touching.down) {
+        player.body.setVelocityY(-500);
+      }
+
+      // الشرطة تطارد اللاعب
+      if (police.x < player.x - 50) {
+        police.setVelocityX(80);
+      } else {
+        police.setVelocityX(0);
+      }
+    }
+
+    function spawnCoin(scene) {
+      const x = Phaser.Math.Between(900, 1200);
+      const coin = coins.create(x, 530, 'coin');
+      coin.setVelocityX(-250);
+    }
+
+    // رفع صورة الوجه
+    document.getElementById('upload').addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function () {
+          const img = new Image();
+          img.onload = function () {
+            const texture = game.textures.createCanvas('playerFace', img.width, img.height);
+            texture.getContext().drawImage(img, 0, 0);
+            texture.refresh();
+            playerFaceTexture = 'playerFace';
+            game.destroy(true);
+            new Phaser.Game(config); // إعادة تشغيل اللعبة بعد تحميل الوجه
+          }
+          img.src = reader.result;
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
+</body>
+</html>
