@@ -1,0 +1,57 @@
+body {
+  margin: 0;
+  background: linear-gradient(to top, #444, #111);
+  overflow: hidden;
+  font-family: sans-serif;
+}
+
+#game {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+#doll {
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  width: 100px;
+  height: 100px;
+  background: url('doll.png') center/cover no-repeat;
+  transform: translateX(-50%);
+}
+
+#player {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  width: 50px;
+  height: 50px;
+  background: url('player.png') center/cover no-repeat;
+  transform: translateX(-50%);
+}
+
+#signal {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 40px;
+}
+
+#timer {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  color: white;
+}
+
+#message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: red;
+  font-size: 36px;
+  transform: translate(-50%, -50%);
+  display: none;
+}
